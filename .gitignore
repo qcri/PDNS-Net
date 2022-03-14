@@ -1,2 +1,4 @@
 *.ipynb_checkpoints*
 *.DS_*
+*.vscode*
+*__pycache*
