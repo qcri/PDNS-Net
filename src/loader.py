@@ -113,7 +113,7 @@ class DNS(InMemoryDataset):
                 for mask_type in mask_types:
                     masks[mask_type].append(homo_data[node_type][mask_type])
             else:
-                y.append(torch.zeros(node_features.shape[0], dtype=torch.bool))
+                y.append(torch.full((node_features.shape[0],),2))
                 for mask_type in mask_types:
                     masks[mask_type].append(torch.zeros(node_features.shape[0], dtype=torch.bool))
 
