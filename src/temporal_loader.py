@@ -61,3 +61,10 @@ class DNS(InMemoryDataset):
 
         graph = DynamicHeteroGraphStaticSignal(edge_indices, edge_weights, feature_dict, targets)
         return graph
+    
+    def fetch_node_info(self):
+        domains = pd.read_csv(os.path.join(self.root, 'domains.csv')).sort_values('domain_node')
+        ips = pd.read_csv(os.path.join(self.root, 'ips.csv')).sort_values('ip_node')
+
+        return domains, ips
+
