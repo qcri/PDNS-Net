@@ -3,6 +3,9 @@ from sklearn.metrics import precision_score, recall_score, confusion_matrix
 import torch
 import numpy as np
 from torch_geometric.data import Data
+import networkx as nx
+import pandas as pd
+import matplotlib.pyplot as plt
 
 
 def score(pred, labels):
@@ -30,6 +33,7 @@ def score(pred, labels):
     # print('SCORE', accuracy, f1, auc)
     return {'acc':accuracy, 'f1':f1, 'auc':auc, 'prec':prec, 'recall':recall, 'fpr':fpr, 'mi_f1':micro_f1, 'ma_f1':macro_f1}
 
+
 def confusion(truth, prediction):
     """ Returns the confusion matrix for the values in the `prediction` and `truth`
     tensors, i.e. the amount of positions where the values of `prediction`
@@ -54,6 +58,7 @@ def confusion(truth, prediction):
     false_negatives = torch.sum(confusion_vector == 0).item()
 
     return true_positives, false_positives, true_negatives, false_negatives
+
 
 def to_homogeneous(data, transform=None) -> Data:
         homo_data = data.clone()
@@ -101,3 +106,73 @@ def to_homogeneous(data, transform=None) -> Data:
         homo_data.num_nodes = num_nodes
             
         return homo_data
+
+    
+def plot_degree_dist_dom_ip_log(g, node_type, title=""):
+    degrees = nx.degree(g)
+    degree_df = pd.DataFrame(degrees, columns=['node_id', 'degree']).sort_values('node_id', ascending=True) 
+    degree_df['node_type'] = node_type
+    degree_df = degree_df.sort_values('degree', ascending=False)
+    degree_df = degree_df[degree_df.degree > 0]
+    
+    domain_df = degree_df[degree_df.node_type == 0]
+    ip_df = degree_df[degree_df.node_type == 1]
+    
+    dom_degrees = domain_df.degree.values
+    ip_degrees = ip_df.degree.values
+    max_deg = max(dom_degrees[0], ip_degrees[0])
+
+    plt.figure(figsize=(4, 3))
+    [[dom_counts, ip_counts],bins,_]=plt.hist([dom_degrees, ip_degrees],bins=max_deg)
+    plt.xlabel('Degree')
+    plt.ylabel('Frequency')
+    plt.close()
+
+    dom_countsnozero=dom_counts*1.
+    dom_countsnozero[dom_counts==0]=-np.Inf
+    ip_countsnozero=ip_counts*1.
+    ip_countsnozero[ip_counts==0]=-np.Inf
+
+    plt.figure(figsize=(3, 2.3))
+    plt.scatter(bins[:-1],dom_countsnozero/float(sum(dom_counts)),s=10,marker='x',label='Domain')
+    plt.scatter(bins[:-1],ip_countsnozero/float(sum(ip_counts)),s=10,marker='x',label="IP")
+    plt.yscale('log'), plt.xscale('log')
+    plt.xlabel('Degree (log)')
+    plt.ylabel("Fraction of nodes (log)")
+    plt.legend()
+    plt.show()
+    
+
+def plot_degree_dist_labels_log(g, node_type, labels, title=""):
+    degrees = nx.degree(g, nbunch=list(torch.nonzero(node_type == 0).t()[0].numpy()))
+    degree_df = pd.DataFrame(degrees, columns=['node_id', 'degree']).sort_values('node_id', ascending=True) 
+    degree_df['label'] = labels
+    degree_df = degree_df.sort_values('degree', ascending=False)
+    degree_df = degree_df[degree_df.degree > 0]
+
+    ben_df = degree_df[degree_df.label == 0]
+    mal_df = degree_df[degree_df.label == 1]
+    
+    ben_degrees = ben_df.degree.values
+    mal_degrees = mal_df.degree.values
+    max_deg = max(mal_degrees[0], ben_degrees[0])
+
+    plt.figure(figsize=(4, 3))
+    [[ben_counts, mal_counts],bins,_]=plt.hist([ben_degrees, mal_degrees],bins=max_deg)
+    plt.xlabel('Degree')
+    plt.ylabel('Frequency')
+    plt.close()
+
+    ben_countsnozero=ben_counts*1.
+    ben_countsnozero[ben_counts==0]=-np.Inf
+    mal_countsnozero=mal_counts*1.
+    mal_countsnozero[mal_counts==0]=-np.Inf
+
+    plt.figure(figsize=(3, 2.3))
+    plt.scatter(bins[:-1],ben_countsnozero/float(sum(ben_counts)),s=10,marker='x',label='Benign',color='g')
+    plt.scatter(bins[:-1],mal_countsnozero/float(sum(mal_counts)),s=10,marker='x',label="Malicious",color='r')
+    plt.yscale('log'), plt.xscale('log')
+    plt.xlabel('Degree (log)')
+    plt.ylabel("Fraction of nodes (log)")
+    plt.legend()
+    plt.show()

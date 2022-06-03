@@ -1,7 +1,0 @@
-{
-    "has_public": false,
-    "has_isolates": false,
-    "pruning": {
-        "ip": 1500
-    }
-}

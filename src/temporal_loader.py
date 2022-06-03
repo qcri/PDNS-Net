@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Optional, Callable
+from collections import defaultdict
 
 import pandas as pd
 import os
@@ -67,4 +68,17 @@ class DNS(InMemoryDataset):
         ips = pd.read_csv(os.path.join(self.root, 'ips.csv')).sort_values('ip_node')
 
         return domains, ips
+    
+    def to_static(self, start=0, end=None):
+        edges = {k: torch.empty((2, 0), dtype=torch.int)for k in self.data[0].edge_index_dict.keys()}
+
+        for item in self.data[start:end]:
+            for et, et_edges in item.edge_index_dict.items():
+                edges[et] = torch.unique(torch.cat([edges[et], et_edges], dim=1), dim=1)
+
+        out = self.data[0].clone()
+        for et, et_edges in edges.items():
+            del out[et]
+            out[et].edge_index = et_edges
+        return out
 
