@@ -2,3 +2,4 @@
 *.DS_*
 *.vscode*
 *__pycache*
+*copy*
