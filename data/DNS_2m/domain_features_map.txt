@@ -1,0 +1,10 @@
+suspicious_tld
+length
+entropy
+fake_tld
+brand
+pop_keywords
+similar
+is_idn
+minus
+num_subdomains
